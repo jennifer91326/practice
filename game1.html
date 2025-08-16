@@ -5,20 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lights Out｜益智小遊戲</title>
   <style>
+    /*
+      ===== 主題變數 / Theme Variables =====
+      方便統一管理顏色、圓角、陰影等設計語言。
+    */
     :root{
-      --bg: #0f1221;
-      --panel: #13162a;
-      --text: #e8ebff;
-      --muted: #9aa3c7;
-      --accent: #6aa6ff;
-      --accent-2: #6affde;
-      --danger: #ff6a8a;
-      --on: #f9f871;
-      --off: #1f2341;
+      --bg: #0f1221;          /* 背景底色 */
+      --panel: #13162a;       /* 側邊面板底色 */
+      --text: #e8ebff;        /* 主要文字色 */
+      --muted: #9aa3c7;       /* 次要/弱化文字色 */
+      --accent: #6aa6ff;      /* 藍色強調 */
+      --accent-2: #6affde;    /* 綠色強調 */
+      --danger: #ff6a8a;      /* 危險/警示用色 */
+      --on: #f9f871;          /* 格子「亮」時的底色 */
+      --off: #1f2341;         /* 格子「暗」時的底色 */
       --shadow: 0 10px 30px rgba(0,0,0,.35), 0 2px 10px rgba(0,0,0,.25);
-      --radius: 18px;
+      --radius: 18px;         /* 全域圓角半徑 */
     }
+
+    /* 讓 body 可滿高，配合置中排版 */
     html,body{height:100%}
+
+    /*
+      背景使用兩層放射漸層，營造深色科幻感；
+      使用 flex 將主要卡片置中顯示。
+    */
     body{
       margin:0;
       background: radial-gradient(1200px 700px at 70% -20%, #1b2150 10%, transparent 60%),
@@ -29,7 +40,11 @@
       display:flex; align-items:center; justify-content:center;
       padding:24px;
     }
+
+    /* App 外卡片容器 */
     .app{ width:min(900px, 92vw); }
+
+    /* 卡片樣式（毛玻璃感 + 邊框 + 陰影） */
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
       border: 1px solid rgba(255,255,255,.08);
@@ -37,13 +52,18 @@
       box-shadow: var(--shadow);
       overflow:hidden;
     }
+
+    /* 標頭：標題 + 控制列 */
     header{
       display:flex; align-items:center; justify-content:space-between; gap:12px;
       padding:18px 22px; background: rgba(0,0,0,.15);
       border-bottom:1px solid rgba(255,255,255,.06);
     }
+
     h1{ font-size: clamp(20px, 2.2vw, 28px); margin:0; letter-spacing:.5px; }
     .subtitle{ color: var(--muted); font-size: 12px; margin-top:4px; }
+
+    /* 控制列（尺寸、按鈕） */
     .controls{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
     .control{
       display:flex; align-items:center; gap:8px;
@@ -51,6 +71,8 @@
       border:1px solid rgba(255,255,255,.08);
       padding:8px 10px; border-radius: 12px;
     }
+
+    /* 表單元件與按鈕的統一外觀 */
     select, button, input[type="range"]{
       appearance:none; -webkit-appearance:none; -moz-appearance:none;
       background: #0f1431; color: var(--text); border:1px solid rgba(255,255,255,.12);
@@ -62,6 +84,7 @@
     .ghost{ background: transparent; border-color: rgba(255,255,255,.12); }
     .danger{ background: linear-gradient(180deg, rgba(255,106,138,.25), rgba(255,106,138,.15)); border-color:#ff9ab055; }
 
+    /* 統計資訊的小膠囊 */
     .stats{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
     .chip{
       background: rgba(255,255,255,.06);
@@ -69,15 +92,21 @@
       padding:6px 10px; border-radius:999px; font-size:13px; color: #d5dcff;
     }
 
+    /*
+      主要版面區：左側說明 + 右側棋盤
+      小螢幕時改為單欄排列。
+    */
     main{ display:grid; grid-template-columns: 320px 1fr; gap:20px; padding:22px; }
     @media (max-width: 780px){ main{ grid-template-columns: 1fr; } }
 
+    /* 左側說明面板 */
     .left{ display:flex; flex-direction:column; gap:14px; }
     .panel{ background: var(--panel); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:14px; }
     .panel h3{ margin:4px 0 12px; font-size:16px; color:#dbe1ff; }
     .howto ol{ margin:0 0 0 18px; padding:0; line-height:1.6; color:#c6cdee; font-size:14px; }
     .howto li+li{ margin-top:6px; }
 
+    /* 棋盤外框與背景裝飾 */
     .grid-wrap{ display:flex; align-items:center; justify-content:center; }
     .grid{
       display:grid; gap:10px; padding:16px; border-radius:20px;
@@ -88,6 +117,7 @@
       box-shadow: var(--shadow);
     }
 
+    /* 棋盤格子：用 button 以便鍵盤/無障礙互動（也設 aria 屬性） */
     .cell{
       width: clamp(42px, 8.5vw, 64px); height: clamp(42px, 8.5vw, 64px);
       border-radius: 14px; display:grid; place-items:center; font-weight:700;
@@ -98,9 +128,16 @@
       cursor:pointer;
     }
     .cell:active{ transform: translateY(1px); }
-    .cell.on{ background: radial-gradient(140px 100px at 50% 30%, #fff6, transparent 60%), var(--on); color:#202020; text-shadow: 0 1px 0 rgba(255,255,255,.25); }
-    .cell.off{ background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.25)), var(--off); color:#92a0d8; }
+    .cell.on{  /* 亮：黃色 + 高光 */
+      background: radial-gradient(140px 100px at 50% 30%, #fff6, transparent 60%), var(--on);
+      color:#202020; text-shadow: 0 1px 0 rgba(255,255,255,.25);
+    }
+    .cell.off{ /* 暗：深藍 + 低彩度文字 */
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.25)), var(--off);
+      color:#92a0d8;
+    }
 
+    /* 底部訊息列 + 難度滑桿 */
     .footer{ padding:16px 22px; border-top:1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between; gap:10px; background: rgba(0,0,0,.1); }
     .msg{ color:#cfe4ff; font-size:14px; }
     .hidden{ display:none !important; }
@@ -116,6 +153,7 @@
       <div class="controls">
         <div class="control">
           <label for="size">尺寸</label>
+          <!-- 盤面大小選擇器：會重建棋盤 -->
           <select id="size">
             <option value="3">3×3</option>
             <option value="4">4×4</option>
@@ -124,13 +162,17 @@
             <option value="7">7×7</option>
           </select>
         </div>
+        <!-- 新局：從解完狀態隨機應用 K 次有效步驟，保證可解 -->
         <button id="new" class="primary">新局 / 洗牌</button>
+        <!-- 回復到開局時的盤面（不重新洗） -->
         <button id="reset" class="ghost">回到起始</button>
+        <!-- 提示：自動執行一步（會記步） -->
         <button id="solve" class="danger">提示一步</button>
       </div>
     </header>
 
     <main>
+      <!-- 左側：統計與玩法說明 -->
       <section class="left">
         <div class="panel">
           <h3>紀錄</h3>
@@ -151,11 +193,13 @@
         </div>
       </section>
 
+      <!-- 右側：棋盤區 -->
       <section class="grid-wrap">
         <div id="grid" class="grid" role="grid" aria-label="Lights Out Grid"></div>
       </section>
     </main>
 
+    <!-- 底部狀態訊息與亂數密度（越大越亂） -->
     <div class="footer">
       <div class="msg" id="msg">祝你好運！</div>
       <div style="display:flex; gap:8px; align-items:center">
@@ -166,10 +210,14 @@
   </div>
 
   <script>
-    // --- Utility ---
-    const pad = (n)=> n.toString().padStart(2,'0');
+    // ==========================
+    // 工具函式 / Utilities
+    // ==========================
+    const pad = (n)=> n.toString().padStart(2,'0'); // 補零：5 -> "05"
 
-    // --- Game State ---
+    // ==========================
+    // 狀態變數 / Game State
+    // ==========================
     const gridEl = document.getElementById('grid');
     const sizeSel = document.getElementById('size');
     const newBtn = document.getElementById('new');
@@ -181,14 +229,15 @@
     const msgEl = document.getElementById('msg');
     const densityEl = document.getElementById('density');
 
-    let N = parseInt(sizeSel.value, 10);
-    let board = [];
-    let startBoard = [];
-    let moves = 0;
-    let timer = 0; // seconds
-    let tick = null; // interval id
-    let started = false;
+    let N = parseInt(sizeSel.value, 10); // 盤面寬高（N×N）
+    let board = [];          // 目前盤面：0=暗, 1=亮
+    let startBoard = [];     // 開局盤面（用於 reset）
+    let moves = 0;           // 步數
+    let timer = 0;           // 經過秒數
+    let tick = null;         // setInterval 的 id
+    let started = false;     // 是否已經開始計時
 
+    // 依盤面尺寸存放「最佳紀錄」的 localStorage key
     const key = (n)=> `lightsout-best-${n}`;
 
     function getBest(n){
@@ -198,21 +247,24 @@
       try{ localStorage.setItem(key(n), JSON.stringify(val)); }catch{}
     }
 
+    // 將最佳紀錄顯示到畫面（若無則顯示 em dash）
     function updateBestUI(){
       const b = getBest(N);
       bestEl.textContent = b? `${b.moves}步｜${b.time}` : '—';
     }
 
+    // 將秒數格式化為 mm:ss
     function fmtTime(sec){
       const m = Math.floor(sec/60), s = sec%60; return `${pad(m)}:${pad(s)}`;
     }
 
     function startTimer(){
-      if(tick) return;
+      if(tick) return; // 已有計時器就不重複啟動
       tick = setInterval(()=>{ timer++; timeEl.textContent = fmtTime(timer); }, 1000);
     }
     function stopTimer(){ if(tick){ clearInterval(tick); tick=null; } }
 
+    // 依 N 建立棋盤 DOM，並掛上點擊事件
     function buildGrid(){
       gridEl.innerHTML = '';
       gridEl.style.gridTemplateColumns = `repeat(${N}, 1fr)`;
@@ -223,60 +275,72 @@
           cell.className = 'cell off';
           cell.setAttribute('role','gridcell');
           cell.setAttribute('aria-label',`row ${r+1} col ${c+1}`);
-          cell.dataset.r = r; cell.dataset.c = c;
+          cell.dataset.r = r; cell.dataset.c = c; // 方便除錯或延伸（鍵盤操作）
           cell.addEventListener('click', ()=> {
             if(!started){ started = true; startTimer(); }
-            move(r,c,true);
+            move(r,c,true); // true 表示要計步
           });
           gridEl.appendChild(cell);
         }
       }
     }
 
+    // 將 (r,c) 設為 on/off，並同步更新對應 DOM 外觀
     function setCell(r,c,on){
       board[r][c] = on?1:0;
-      const idx = r*N + c;
+      const idx = r*N + c;           // 一維索引（Grid 以 row-major 儲存）
       const cell = gridEl.children[idx];
       cell.classList.toggle('on', !!on);
       cell.classList.toggle('off', !on);
     }
 
+    // 切換 (r,c) 狀態（若越界則忽略）
     function toggle(r,c){ if(r>=0 && r<N && c>=0 && c<N) setCell(r,c, !board[r][c]); }
 
+    // 鄰居集合：自身 + 上下左右
     function neighbors(r,c){ return [[r,c],[r-1,c],[r+1,c],[r,c-1],[r,c+1]]; }
 
+    // 應用一步：對自身 + 上下左右做 toggle
     function apply(r,c){ neighbors(r,c).forEach(([rr,cc])=> toggle(rr,cc)); }
 
+    // 是否全部為暗（0）
     function isWin(){ return board.every(row => row.every(v => v===0)); }
 
+    // 執行一步（可選是否記步），並檢查過關
     function move(r,c, countMove){
       apply(r,c);
       if(countMove){ moves++; movesEl.textContent = moves; }
       if(isWin()) onWin();
     }
 
+    // 過關：停止計時、更新訊息與最佳紀錄
     function onWin(){
       stopTimer();
       msgEl.textContent = `🎉 恭喜過關！用時 ${fmtTime(timer)}、步數 ${moves}`;
       const b = getBest(N);
       const current = { moves, time: fmtTime(timer) };
+      // 若無紀錄，或更少步數；若步數相同則比時間
       if(!b || moves < b.moves || (moves===b.moves && timer < (parseInt((b.time||'0:0').split(':')[0])*60 + parseInt((b.time||'0:0').split(':')[1])))){
         setBest(N, current);
         updateBestUI();
       }
     }
 
+    // 產生新局：
+    // 1) 先建立全暗盤面；
+    // 2) 從「解完狀態」出發，隨機套用 K 次有效步驟（等價於亂數打亂），因此必定可解；
+    // 3) 紀錄為 startBoard，供重置用。
     function newBoard(n=N){
       N=n; board = Array.from({length:N}, ()=> Array(N).fill(0));
       buildGrid();
-      // Randomize by applying K random valid moves from the solved state => guaranteed solvable
+      // K 依盤面大小與使用者選的亂度而定
       const K = Math.max(5, Math.floor((N*N) * (parseInt(densityEl.value,10)/10)));
       for(let i=0;i<K;i++){
         const r = Math.floor(Math.random()*N);
         const c = Math.floor(Math.random()*N);
         apply(r,c);
       }
-      // Save as start state for reset
+      // 保存初始狀態（深拷貝）
       startBoard = board.map(row=> row.slice());
       moves = 0; movesEl.textContent = moves;
       timer = 0; timeEl.textContent = fmtTime(timer); started=false; stopTimer();
@@ -284,20 +348,21 @@
       updateBestUI();
     }
 
+    // 回復到開局：還原 board 並刷新 DOM、清步數與時間
     function resetToStart(){
       board = startBoard.map(row=> row.slice());
-      // repaint
+      // repaint 所有格子
       for(let r=0;r<N;r++) for(let c=0;c<N;c++) setCell(r,c, !!board[r][c]);
       moves = 0; movesEl.textContent = moves;
       timer = 0; timeEl.textContent = fmtTime(timer); started=false; stopTimer();
       msgEl.textContent = '已回到開局狀態。';
     }
 
-    // Optional: one-step hint by reverting a random lit cell with its move parity.
-    // Simple strategy: pick any lit cell, click it (works because from solved we created
-    // the puzzle via random valid moves; applying the same set in any order solves it).
+    // ===== 提示（一步）策略說明 =====
+    // 因為新局是由「解完狀態」出發，隨機施作一組合法步驟，所以：
+    // 以任何順序把「那些被施作過的步驟」再做一次，就能回到解完狀態。
+    // 這裡採用簡單啟發式：優先挑一個當前為亮的格子來點。
     function hintOnce(){
-      // Pick a random position and apply; heuristic: prioritize cells that are "on"
       const lit = [];
       for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(board[r][c]===1) lit.push([r,c]);
       const pick = lit.length? lit[Math.floor(Math.random()*lit.length)] : [Math.floor(Math.random()*N), Math.floor(Math.random()*N)];
@@ -306,13 +371,15 @@
       msgEl.textContent = '已套用提示的一步。';
     }
 
-    // --- Events ---
-    sizeSel.addEventListener('change', (e)=> newBoard(parseInt(e.target.value,10)) );
-    newBtn.addEventListener('click', ()=> newBoard(N));
-    resetBtn.addEventListener('click', resetToStart);
-    solveBtn.addEventListener('click', hintOnce);
+    // ==========================
+    // 事件綁定 / Events
+    // ==========================
+    sizeSel.addEventListener('change', (e)=> newBoard(parseInt(e.target.value,10)) ); // 改尺寸即新局
+    newBtn.addEventListener('click', ()=> newBoard(N));     // 重新洗本尺寸
+    resetBtn.addEventListener('click', resetToStart);       // 回到起始
+    solveBtn.addEventListener('click', hintOnce);           // 提示一步
 
-    // Initialize
+    // 啟動：以預設 N 建立新局
     newBoard(N);
   </script>
 </body>
